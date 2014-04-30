@@ -65,7 +65,7 @@ def gateway_check_session_active() -> str:
     '''
     The gateway URI to check if the authorized Gateway is still active, this URI needs to have a marker '%s' where the actual authentication code will be placed
     '''
-    return 'resources/Security/Login/%s/SessionActive'
+    return 'resources/Security/Login/%s'
 
 @ioc.config
 def server_provide_gateway():

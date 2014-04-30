@@ -56,7 +56,7 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
     
     nameAuthorization = 'Authorization'
     # The header name for the session identifier.
-    gateway_check_session_active = 'api/Security/Login/%s/SessionActive'; wire.config('gateway_check_session_active', doc='''
+    gateway_check_session_active = 'api/Security/Login/%s'; wire.config('gateway_check_session_active', doc='''
             The gateway URI to check if the authorized Gateway is still active, this URI needs to have a marker '%s' where the actual authentication code will be placed
             ''')
     
@@ -93,7 +93,7 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
             self._repositories[authentication] = repository
         else:
             jobj, error = self.requesterGetJSON.request(self.gateway_check_session_active % quote(authentication), details=True)
-            if not jobj['collection']:
+            if error:
                 UNAUTHORIZED_ACCESS.set(response)
                 request.match = request.repository.find(request.method, request.headers, request.uri, UNAUTHORIZED_ACCESS.status)
                 response.text = error.text
