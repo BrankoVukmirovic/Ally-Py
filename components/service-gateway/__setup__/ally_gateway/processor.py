@@ -178,6 +178,7 @@ def gatewayRepository() -> Handler:
 def gatewayAuthorizedRepository() -> Handler:
     b = GatewayAuthorizedRepositoryHandler()
     b.uri = gateway_authorized_uri()
+    b.gateway_check_session_active = gateway_check_session_active()
     b.cleanupInterval = cleanup_authorized_interval()
     b.requesterGetJSON = requesterRESTGetJSON()
     return b

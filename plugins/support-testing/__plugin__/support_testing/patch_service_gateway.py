@@ -36,7 +36,8 @@ else:
     from __setup__.ally_gateway.processor import assemblyRESTRequest
     from __setup__.ally_gateway.processor import cleanup_interval
     from __setup__.ally_gateway.processor import requesterRESTGetJSON, \
-        cleanup_authorized_interval, gateway_authorized_uri, gateway_uri
+        cleanup_authorized_interval, gateway_authorized_uri, gateway_uri, \
+        gateway_check_session_active
     from __setup__.ally_gateway.processor import updateAssemblyGateway, assemblyGateway, \
     gatewayRepository, gatewayAuthorizedRepository
     from ally.gateway.http.impl.processor.respository import GatewayRepositoryHandler
@@ -55,6 +56,7 @@ else:
         b = GatewayAuthorizedRepositoryHandler()
         b.uri = '%s%s' % (root_uri_test_resources(), gateway_authorized_uri()[len(root_uri_resources()):])
         b.cleanupInterval = cleanup_authorized_interval()
+        b.gateway_check_session_active = '%s%s' % (root_uri_test_resources(), gateway_check_session_active()[len(root_uri_resources()):])
         b.requesterGetJSON = requesterRESTGetJSON()
         return b
 

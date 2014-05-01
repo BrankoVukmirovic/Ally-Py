@@ -56,14 +56,12 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
     
     nameAuthorization = 'Authorization'
     # The header name for the session identifier.
-    gateway_check_session_active = 'api/Security/Login/%s'; wire.config('gateway_check_session_active', doc='''
-            The gateway URI to check if the authorized Gateway is still active, this URI needs to have a marker '%s' where the actual authentication code will be placed
-            ''')
-    
+
+    gateway_check_session_active = str
+
     def __init__(self):
         assert isinstance(self.nameAuthorization, str), 'Invalid authorization name %s' % self.nameAuthorization
         super().__init__()
-        
         self._timeOut = timedelta(seconds=self.cleanupInterval)
 
     def process(self, chain, request:Request, response:Response, Gateway:Context, Match:Context, **keyargs):
@@ -91,26 +89,36 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
             repository = Repository(request.clientIP, [self.populate(Identifier(Gateway()), obj)
                                                        for obj in jobj['collection']], Match)
             self._repositories[authentication] = repository
+            self._lastAccess[authentication] = datetime.now()
         else:
             jobj, error = self.requesterGetJSON.request(self.gateway_check_session_active % quote(authentication), details=True)
             if error:
-                UNAUTHORIZED_ACCESS.set(response)
-                request.match = request.repository.find(request.method, request.headers, request.uri, UNAUTHORIZED_ACCESS.status)
-                response.text = error.text
+                repository = Repository(request.clientIP, [], Match)
                 self._repositories.pop(authentication, None)
                 self._lastAccess.pop(authentication, None)
-                return
-
-        self._lastAccess[authentication] = datetime.now()
         
         if request.repository: request.repository = RepositoryJoined(repository, request.repository)
         else: request.repository = repository
     
     # ----------------------------------------------------------------
-    
+
     def initialize(self):
         '''
         @see: GatewayRepositoryHandler.initialize
         '''
         self._repositories = {}
         self._lastAccess = {}
+        self.startCleanupThread('Cleanup authorized gateways thread')
+
+    def performCleanup(self):
+        '''
+        @see: GatewayRepositoryHandler.performCleanup
+        '''
+        current, expired = datetime.now() - self._timeOut, []
+        for authentication, lastAccess in self._lastAccess.items():
+            if current > lastAccess: expired.append(authentication)
+
+        assert log.debug('Clearing %s sessions at %s' % (len(expired), datetime.now())) or True
+        for authentication in expired:
+            self._repositories.pop(authentication, None)
+            self._lastAccess.pop(authentication, None)
