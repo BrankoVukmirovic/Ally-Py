@@ -12,11 +12,12 @@ Provides the gateway repository processor.
 from . import respository
 from .respository import GatewayRepositoryHandler, Repository, Identifier, \
     Response
+from ally.container import ioc, wire
 from ally.container.ioc import injected
 from ally.design.processor.attribute import requires, defines
 from ally.design.processor.context import Context
 from ally.gateway.http.spec.gateway import RepositoryJoined
-from ally.http.spec.codes import BAD_GATEWAY
+from ally.http.spec.codes import BAD_GATEWAY, UNAUTHORIZED_ACCESS 
 from ally.http.spec.headers import HeaderRaw, HeadersRequire
 from datetime import datetime, timedelta
 from urllib.parse import quote
@@ -30,6 +31,7 @@ AUTHORIZATION = HeaderRaw('Authorization')
 # The header for the session identifier. 
 
 # --------------------------------------------------------------------
+
 
 class Request(respository.Request, HeadersRequire):
     '''
@@ -54,11 +56,12 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
     
     nameAuthorization = 'Authorization'
     # The header name for the session identifier.
-    
+
+    gateway_check_session_active = str
+
     def __init__(self):
         assert isinstance(self.nameAuthorization, str), 'Invalid authorization name %s' % self.nameAuthorization
         super().__init__()
-        
         self._timeOut = timedelta(seconds=self.cleanupInterval)
 
     def process(self, chain, request:Request, response:Response, Gateway:Context, Match:Context, **keyargs):
@@ -72,7 +75,8 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
         if response.isSuccess is False: return  # Skip in case the response is in error
         
         authentication = AUTHORIZATION.fetch(request)
-        if not authentication: return
+        if not authentication:
+            return
         
         repository = self._repositories.get(authentication)
         if repository is None:
@@ -85,13 +89,19 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
             repository = Repository(request.clientIP, [self.populate(Identifier(Gateway()), obj)
                                                        for obj in jobj['collection']], Match)
             self._repositories[authentication] = repository
-        self._lastAccess[authentication] = datetime.now()
+            self._lastAccess[authentication] = datetime.now()
+        else:
+            jobj, error = self.requesterGetJSON.request(self.gateway_check_session_active % quote(authentication), details=True)
+            if error:
+                repository = Repository(request.clientIP, [], Match)
+                self._repositories.pop(authentication, None)
+                self._lastAccess.pop(authentication, None)
         
         if request.repository: request.repository = RepositoryJoined(repository, request.repository)
         else: request.repository = repository
     
     # ----------------------------------------------------------------
-    
+
     def initialize(self):
         '''
         @see: GatewayRepositoryHandler.initialize
@@ -107,7 +117,7 @@ class GatewayAuthorizedRepositoryHandler(GatewayRepositoryHandler):
         current, expired = datetime.now() - self._timeOut, []
         for authentication, lastAccess in self._lastAccess.items():
             if current > lastAccess: expired.append(authentication)
-        
+
         assert log.debug('Clearing %s sessions at %s' % (len(expired), datetime.now())) or True
         for authentication in expired:
             self._repositories.pop(authentication, None)

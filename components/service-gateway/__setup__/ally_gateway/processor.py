@@ -61,6 +61,13 @@ def gateway_authorized_uri() -> str:
     return 'resources/Security/Login/%s/Gateway'
 
 @ioc.config
+def gateway_check_session_active() -> str:
+    '''
+    The gateway URI to check if the authorized Gateway is still active, this URI needs to have a marker '%s' where the actual authentication code will be placed
+    '''
+    return 'resources/Security/Login/%s'
+
+@ioc.config
 def server_provide_gateway():
     '''
     Indicates that this server should provide the gateway service, possible values are:
@@ -171,6 +178,7 @@ def gatewayRepository() -> Handler:
 def gatewayAuthorizedRepository() -> Handler:
     b = GatewayAuthorizedRepositoryHandler()
     b.uri = gateway_authorized_uri()
+    b.gateway_check_session_active = gateway_check_session_active()
     b.cleanupInterval = cleanup_authorized_interval()
     b.requesterGetJSON = requesterRESTGetJSON()
     return b
