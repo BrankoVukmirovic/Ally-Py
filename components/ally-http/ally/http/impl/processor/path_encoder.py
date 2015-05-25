@@ -153,10 +153,10 @@ class EncoderPathHost(IEncoderPath):
                 assert isinstance(value, str), 'Invalid parameter value %s' % value
             parameters = urlencode(parameters)
         else: parameters = ''
-        if url.scheme or url.netloc: return urlunsplit(('', url.netloc, url.path, parameters, ''))
+        if url.scheme or url.netloc: return urlunsplit((url.scheme, url.netloc, url.path, parameters, ''))
         # We just needed to append the scheme
-        return urlunsplit(('', self._host, url.path, parameters, ''))
-    
+        return urlunsplit((self._scheme, self._host, url.path, parameters, ''))
+
     def encodePattern(self, path):
         '''
         @see: IEncoderPath.encodePattern
