@@ -127,28 +127,28 @@ class ParameterHandler(HandlerProcessorProceed, INodeInvokerListener):
             for name, value in request.parameters:
                 if not decode(path=name, value=value, **context): illegal.append((name, value))
 
-            if illegal:
-                encode = self._cacheEncode.get(invoker)
-                if encode is None:
-                    encode = self.encodeInvoker(invoker)
-                    request.path.node.addNodeListener(self)
-                    self._cacheEncode[invoker] = encode
+            # if illegal:
+            #     encode = self._cacheEncode.get(invoker)
+            #     if encode is None:
+            #         encode = self.encodeInvoker(invoker)
+            #         request.path.node.addNodeListener(self)
+            #         self._cacheEncode[invoker] = encode
 
-                response.code, response.status, response.isSuccess = PARAMETER_ILLEGAL
-                context = dict(normalizer=request.normalizerParameters, converter=request.converterParameters)
-                sample = encode(value=SAMPLE, **context)
+            #     response.code, response.status, response.isSuccess = PARAMETER_ILLEGAL
+            #     context = dict(normalizer=request.normalizerParameters, converter=request.converterParameters)
+            #     sample = encode(value=SAMPLE, **context)
 
-                errors = [List('illegal', *(Object('parameter', attributes={'name':name}) for name, _value in illegal))]
-                if sample:
-                    assert isinstance(sample, deque), 'Invalid sample %s' % sample
+            #     errors = [List('illegal', *(Object('parameter', attributes={'name':name}) for name, _value in illegal))]
+            #     if sample:
+            #         assert isinstance(sample, deque), 'Invalid sample %s' % sample
 
-                    response.errorMessage = 'Illegal parameter or value'
-                    samples = (Object('parameter', attributes=OrderedDict((('name', name), ('expected', value))))
-                               for name, value in sample)
-                    errors.append(List('sample', *samples))
-                else:
-                    response.errorMessage = 'No parameters are allowed on this URL'
-                response.errorDetails = Object('parameter', *errors)
+            #         response.errorMessage = 'Illegal parameter or value'
+            #         samples = (Object('parameter', attributes=OrderedDict((('name', name), ('expected', value))))
+            #                    for name, value in sample)
+            #         errors.append(List('sample', *samples))
+            #     else:
+            #         response.errorMessage = 'No parameters are allowed on this URL'
+            #     response.errorDetails = Object('parameter', *errors)
 
     # ----------------------------------------------------------------
 
