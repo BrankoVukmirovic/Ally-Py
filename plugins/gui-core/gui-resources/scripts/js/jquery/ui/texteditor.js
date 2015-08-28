@@ -508,6 +508,7 @@ define('jqueryui/texteditor', ['jquery','jqueryui/widget', 'jqueryui/ext', 'jque
                             {
                                 self.lib.restoreSelection(self.restoreSelectionMarkerId);
                                 parent = self.editTarget;
+                                parent.trigger('htmlOkButtonBefore', [$(this)]);
                                 parent.html($(this).find('textarea.editor-code').val());
                                 $(this).dialog('close');
                                 parent.trigger('htmlOkButton');
