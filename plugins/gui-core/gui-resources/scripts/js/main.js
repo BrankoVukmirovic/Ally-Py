@@ -29,8 +29,8 @@ requirejs.config
         'moment': config.cjs('moment'),
         'router': config.cjs('router'),
         'vendor': config.cjs('vendor'),
-        'angular': 'http://ajax.googleapis.com/ajax/libs/angularjs/1.2.24/angular',
-        'angular-resource': 'http://code.angularjs.org/1.0.7/angular-resource',
+        'angular': 'https://ajax.googleapis.com/ajax/libs/angularjs/1.2.24/angular.min',
+        'angular-resource': 'https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.0.7/angular-resource.min',
         'interceptor': config.cjs('interceptor'),
         'facebook-connect': 'https://connect.facebook.net/en_US/all'
 	},
